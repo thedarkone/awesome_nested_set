@@ -486,40 +486,43 @@ module CollectiveIdea #:nodoc:
                 # there would be no change
                 return if bound == self[right_column_name] || bound == self[left_column_name]
 
-                # we have defined the boundaries of two non-overlapping intervals,
-                # so sorting puts both the intervals and their boundaries in order
-                a, b, c, d = [self[left_column_name], self[right_column_name], bound, other_bound].sort
-
-                new_parent = case position
-                  when :child;  target.id
-                  when :root;   nil
-                  else          target[parent_column_name]
-                end
-
-                self.class.base_class.update_all([
-                  "#{quoted_left_column_name} = CASE " +
-                    "WHEN #{quoted_left_column_name} BETWEEN :a AND :b " +
-                      "THEN #{quoted_left_column_name} + :d - :b " +
-                    "WHEN #{quoted_left_column_name} BETWEEN :c AND :d " +
-                      "THEN #{quoted_left_column_name} + :a - :c " +
-                    "ELSE #{quoted_left_column_name} END, " +
-                  "#{quoted_right_column_name} = CASE " +
-                    "WHEN #{quoted_right_column_name} BETWEEN :a AND :b " +
-                      "THEN #{quoted_right_column_name} + :d - :b " +
-                    "WHEN #{quoted_right_column_name} BETWEEN :c AND :d " +
-                      "THEN #{quoted_right_column_name} + :a - :c " +
-                    "ELSE #{quoted_right_column_name} END, " +
-                  "#{quoted_parent_column_name} = CASE " +
-                    "WHEN #{self.class.base_class.primary_key} = :id THEN :new_parent " +
-                    "ELSE #{quoted_parent_column_name} END",
-                  {:a => a, :b => b, :c => c, :d => d, :id => self.id, :new_parent => new_parent}
-                ])
+                update_tree(target, position, bound, other_bound)
               end
               target.reload_nested_set if target
               self.reload_nested_set
             end
           end
 
+          def update_tree(target, position, bound, other_bound)
+            # we have defined the boundaries of two non-overlapping intervals,
+            # so sorting puts both the intervals and their boundaries in order
+            a, b, c, d = [self[left_column_name], self[right_column_name], bound, other_bound].sort
+
+            new_parent = case position
+              when :child;  target.id
+              when :root;   nil
+              else          target[parent_column_name]
+            end
+
+            self.class.base_class.update_all([
+              "#{quoted_left_column_name} = CASE " +
+                "WHEN #{quoted_left_column_name} BETWEEN :a AND :b " +
+                  "THEN #{quoted_left_column_name} + :d - :b " +
+                "WHEN #{quoted_left_column_name} BETWEEN :c AND :d " +
+                  "THEN #{quoted_left_column_name} + :a - :c " +
+                "ELSE #{quoted_left_column_name} END, " +
+              "#{quoted_right_column_name} = CASE " +
+                "WHEN #{quoted_right_column_name} BETWEEN :a AND :b " +
+                  "THEN #{quoted_right_column_name} + :d - :b " +
+                "WHEN #{quoted_right_column_name} BETWEEN :c AND :d " +
+                  "THEN #{quoted_right_column_name} + :a - :c " +
+                "ELSE #{quoted_right_column_name} END, " +
+              "#{quoted_parent_column_name} = CASE " +
+                "WHEN #{self.class.base_class.primary_key} = :id THEN :new_parent " +
+                "ELSE #{quoted_parent_column_name} END",
+              {:a => a, :b => b, :c => c, :d => d, :id => self.id, :new_parent => new_parent}
+            ])
+          end
         end
 
       end
