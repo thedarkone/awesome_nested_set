@@ -503,7 +503,11 @@ module CollectiveIdea #:nodoc:
               when :root;   nil
               else          target[parent_column_name]
             end
+            
+            run_tree_update_query(:a => a, :b => b, :c => c, :d => d, :id => self.id, :new_parent => new_parent)
+          end
 
+          def run_tree_update_query(conditions)
             self.class.base_class.update_all([
               "#{quoted_left_column_name} = CASE " +
                 "WHEN #{quoted_left_column_name} BETWEEN :a AND :b " +
@@ -520,7 +524,7 @@ module CollectiveIdea #:nodoc:
               "#{quoted_parent_column_name} = CASE " +
                 "WHEN #{self.class.base_class.primary_key} = :id THEN :new_parent " +
                 "ELSE #{quoted_parent_column_name} END",
-              {:a => a, :b => b, :c => c, :d => d, :id => self.id, :new_parent => new_parent}
+              conditions
             ])
           end
         end
