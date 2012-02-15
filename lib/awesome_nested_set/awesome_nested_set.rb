@@ -529,8 +529,7 @@ module CollectiveIdea #:nodoc:
           end
 
           def run_tree_update_query(updates)
-            klass = self.class
-            klass.update_all([klass::ANS_UPDATE_SQL, updates])
+            nested_set_scope.update_all([self.class::ANS_UPDATE_SQL, updates])
           end
         end
 
