@@ -533,6 +533,7 @@ module CollectiveIdea #:nodoc:
           end
         end
 
+        include InstanceMethods
       end
 
       # Mixed into both classes and instances to provide easy access to the column names
